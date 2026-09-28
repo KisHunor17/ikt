@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="hu" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DHCP Működése & Interaktív DORA Szimulátor</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dhcp: {
+                            blue: '#3b82f6',
+                            cyan: '#06b6d4',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            purple: '#8b5cf6',
+                            rose: '#f43f5e',
+                            dark: '#0f172a',
+                            card: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .light .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.4);
+        }
+        .glow-emerald {
+            box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.4);
+        }
+        .glow-amber {
+            box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.4);
+        }
+        .glow-purple {
+            box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.4);
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.03); }
+        }
+        .animate-pulse-slow {
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .light ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen transition-colors duration-300 light:bg-slate-50 light:text-slate-800">
+
+    <nav class="sticky top-0 z-50 glass-panel border-b border-slate-800 dark:border-slate-800 light:border-slate-200 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-cyan-500/30">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">DHCP</span>
+                        <span class="text-xs block text-slate-400 font-mono">Academy & Simulator</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Links -->
+                <div class="hidden md:flex items-center space-x-1 lg:space-x-4 text-sm font-medium">
+                    <a href="#intro" class="px-3 py-2 rounded-lg hover:text-cyan-400 hover:bg-slate-800/50 transition">Mi az a DHCP?</a>
+                    <a href="#simulator" class="px-3 py-2 rounded-lg hover:text-cyan-400 hover:bg-slate-800/50 transition">DORA Szimulátor</a>
+                    <a href="#dora-steps" class="px-3 py-2 rounded-lg hover:text-cyan-400 hover:bg-slate-800/50 transition">Lépések</a>
+                    <a href="#lease" class="px-3 py-2 rounded-lg hover:text-cyan-400 hover:bg-slate-800/50 transition">Bérleti Idő</a>
+                    <a href="#packet" class="px-3 py-2 rounded-lg hover:text-cyan-400 hover:bg-slate-800/50 transition">Csomag Szerkezet</a>
+                    <a href="#advanced" class="px-3 py-2 rounded-lg hover:text-cyan-400 hover:bg-slate-800/50 transition">Haladó & Biztonság</a>
+                </div>
+
+                <!-- Right Actions: Theme Switcher & Mobile Menu Trigger -->
+                <div class="flex items-center space-x-3">
+                    <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-800 dark:bg-slate-800 light:bg-slate-200 text-slate-300 dark:text-amber-400 light:text-slate-700 hover:ring-2 hover:ring-cyan-400 transition" title="Téma váltása">
+                        <i class="fa-solid fa-moon dark:inline hidden"></i>
+                        <i class="fa-solid fa-sun light:inline inline dark:hidden"></i>
+                    </button>
+                    <a href="#simulator" class="hidden sm:inline-flex items-center px-4 py-2 text-xs font-semibold rounded-xl text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-md shadow-cyan-500/20 transition transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-play mr-2"></i> Szimuláció
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative overflow-hidden py-16 lg:py-24 border-b border-slate-800/60">
+        <canvas id="heroCanvas" class="absolute inset-0 w-full h-full opacity-30 pointer-events-none"></canvas>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto">
+                <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 mb-6">
+                    <i class="fa-solid fa-bolt mr-2"></i> Dinamikus Hálózati Konfigurációs Protokoll
+                </div>
+                <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white dark:text-white light:text-slate-900 mb-6 leading-tight">
+                    Hogyan kapnak az eszközök <span class="bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 bg-clip-text text-transparent">IP címet</span> automatikusan?
+                </h1>
+                <p class="text-lg text-slate-300 dark:text-slate-300 light:text-slate-600 mb-8 leading-relaxed">
+                    Ismerd meg a <strong class="text-cyan-400 font-semibold">DHCP</strong> működését, a négylépéses <strong class="text-emerald-400 font-semibold">DORA</strong> folyamatot, a bérleti idő megújítását és a hálózati csomagok belső szerkezetét interaktív szemléltetéssel!
+                </p>
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    <a href="#simulator" class="px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 transition transform hover:-translate-y-0.5 flex items-center">
+                        <i class="fa-solid fa-desktop mr-2"></i> DORA Szimulátor Indítása
+                    </a>
+                    <a href="#intro" class="px-6 py-3.5 rounded-xl font-bold text-sm bg-slate-800/80 dark:bg-slate-800 light:bg-slate-200 hover:bg-slate-700 text-slate-200 dark:text-slate-200 light:text-slate-800 border border-slate-700 transition flex items-center">
+                        <i class="fa-solid fa-book-open mr-2"></i> Elméleti Alapok
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="intro" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-white dark:text-white light:text-slate-900 mb-4">
+                <i class="fa-solid fa-circle-info text-cyan-400 mr-2"></i> Mi az a DHCP?
+            </h2>
+            <p class="text-slate-400 max-w-2xl mx-auto">
+                A <strong>DHCP (Dynamic Host Configuration Protocol)</strong> egy hálózati protokoll, amely automatikusan oszt ki IP címeket és egyéb hálózati beállításokat a csatlakozó eszközöknek.
+            </p>
+        </div>
+
+        <!-- Comparison Cards: Manual vs BOOTP vs DHCP -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden border border-slate-800">
+                <div class="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-keyboard"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-slate-100 dark:text-slate-100 light:text-slate-900">1. Manuális Címzés</h3>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    Minden gépen kézzel kell beállítani az IP címet, maszkot és átjárót. Lassú, hibaveszélyes (IP ütközések) és nagy hálózatoknál fenntarthatatlan.
+                </p>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden border border-slate-800">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-slate-100 dark:text-slate-100 light:text-slate-900">2. BOOTP Protokoll</h3>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    A DHCP elődje (Bootstrap Protocol). Képes volt hálózati indításra, de fix MAC-IP táblázatokat igényelt a szerveren, és nem ismerte a dinamikus bérleti időt.
+                </p>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden border border-cyan-500/30 glow-cyan">
+                <div class="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2 text-cyan-400">3. DHCP (Automatikus)</h3>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                    Teljesen automatizált és dinamikus! Címkészletből (pool) oszt ki címet ideiglenes bérlettel (Lease), majd használat után automatikusan visszaveszi azt.
+                </p>
+            </div>
+        </div>
+
+        <!-- Core Concept Cards Grid -->
+        <h3 class="text-2xl font-bold text-slate-100 dark:text-slate-100 light:text-slate-900 mb-6 text-center">
+            A DHCP által kiosztott 5 Fő Paraméter
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- IP Address -->
+            <div class="glass-panel p-5 rounded-xl text-center hover:border-cyan-500/50 transition group">
+                <div class="w-10 h-10 mx-auto rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <h4 class="font-bold text-sm text-slate-200 mb-1">IP Cím</h4>
+                <p class="text-xs text-cyan-400 font-mono mb-2">Pl: 192.168.1.100</p>
+                <p class="text-xs text-slate-400">Az eszköz egyedi azonosítója a helyi hálózaton.</p>
+            </div>
+
+            <!-- Subnet Mask -->
+            <div class="glass-panel p-5 rounded-xl text-center hover:border-blue-500/50 transition group">
+                <div class="w-10 h-10 mx-auto rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-filter"></i>
+                </div>
+                <h4 class="font-bold text-sm text-slate-200 mb-1">Alhálózati Maszk</h4>
+                <p class="text-xs text-blue-400 font-mono mb-2">Pl: 255.255.255.0</p>
+                <p class="text-xs text-slate-400">Meghatározza a hálózati és a host azonosító határait.</p>
+            </div>
+
+            <!-- Default Gateway -->
+            <div class="glass-panel p-5 rounded-xl text-center hover:border-emerald-500/50 transition group">
+                <div class="w-10 h-10 mx-auto rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-router"></i>
+                </div>
+                <h4 class="font-bold text-sm text-slate-200 mb-1">Alapért. Átjáró</h4>
+                <p class="text-xs text-emerald-400 font-mono mb-2">Pl: 192.168.1.1</p>
+                <p class="text-xs text-slate-400">A router címe, amely továbbítja a forgalmat az Internet felé.</p>
+            </div>
+
+            <!-- DNS Server -->
+            <div class="glass-panel p-5 rounded-xl text-center hover:border-amber-500/50 transition group">
+                <div class="w-10 h-10 mx-auto rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <h4 class="font-bold text-sm text-slate-200 mb-1">DNS Szerver</h4>
+                <p class="text-xs text-amber-400 font-mono mb-2">Pl: 8.8.8.8 / 1.1.1.1</p>
+                <p class="text-xs text-slate-400">A domain neveket (pl. google.hu) konvertálja IP címekké.</p>
+            </div>
+
+            <!-- Lease Time -->
+            <div class="glass-panel p-5 rounded-xl text-center hover:border-purple-500/50 transition group">
+                <div class="w-10 h-10 mx-auto rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <h4 class="font-bold text-sm text-slate-200 mb-1">Bérleti Idő</h4>
+                <p class="text-xs text-purple-400 font-mono mb-2">Pl: 24 Óra (86400s)</p>
+                <p class="text-xs text-slate-400">Az az időtartam, ameddig a kliens használhatja az IP címet.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="simulator" class="py-16 bg-slate-900/50 dark:bg-slate-900/50 light:bg-slate-100 border-y border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-8">
+                <span class="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">Interaktív Labor</span>
+                <h2 class="text-3xl font-extrabold text-white dark:text-white light:text-slate-900 mt-2">
+                    A DORA Folyamat Szimulátora
+                </h2>
+                <p class="text-slate-400 max-w-xl mx-auto text-sm mt-1">
+                    Kövesd nyomon lépésről lépésre, hogyan folyik le a kommunikáció a Kliens (PC) és a DHCP Szerver között!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left Visual Diagram Panel (8 cols) -->
+                <div class="lg:col-span-8 glass-panel p-6 rounded-2xl border border-slate-800 relative">
+                    <!-- Top Status Bar -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-800 mb-6">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="text-xs font-mono text-slate-300">Hálózat Állapota: <strong id="simStatusText" class="text-cyan-400">Várakozás az indításra...</strong></span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-slate-400">Aktuális Fázis:</span>
+                            <span id="phaseBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 font-mono">
+                                READY
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- SVG Network Diagram Area -->
+                    <div class="relative min-h-[320px] bg-slate-950/80 rounded-xl p-6 overflow-hidden border border-slate-800/80 flex items-center justify-between">
+                        
+                        <!-- Connecting Cable Lines (SVG Path) -->
+                        <svg class="absolute inset-0 w-full h-full pointer-events-none" id="networkCableSvg">
+                            <line x1="20%" y1="50%" x2="50%" y2="50%" stroke="#334155" stroke-width="4" stroke-dasharray="6,6" id="cableLeft" />
+                            <line x1="50%" y1="50%" x2="80%" y2="50%" stroke="#334155" stroke-width="4" stroke-dasharray="6,6" id="cableRight" />
+                        </svg>
+
+                        <!-- Node 1: Client PC -->
+                        <div class="relative z-10 text-center w-1/4">
+                            <div id="nodeClient" class="w-20 h-20 mx-auto rounded-2xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-cyan-400 shadow-xl transition-all duration-300">
+                                <i class="fa-solid fa-laptop text-3xl"></i>
+                                <span class="text-[10px] font-mono mt-1 text-slate-400">KLIENS</span>
+                            </div>
+                            <div class="mt-3 font-mono text-xs text-slate-300">
+                                <p class="font-bold">DHCP Kliens</p>
+                                <p class="text-[11px] text-slate-400" id="clientMacLabel">MAC: AA:BB:CC:11:22:33</p>
+                                <p class="text-[11px] font-bold text-amber-400" id="clientIpLabel">IP: 0.0.0.0 (Unconfigured)</p>
+                            </div>
+                        </div>
+
+                        <!-- Node 2: Switch -->
+                        <div class="relative z-10 text-center w-1/4">
+                            <div id="nodeSwitch" class="w-16 h-16 mx-auto rounded-xl bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-slate-400 shadow-lg">
+                                <i class="fa-solid fa-network-wired text-2xl"></i>
+                            </div>
+                            <div class="mt-3 font-mono text-xs text-slate-400">
+                                <p class="font-bold text-slate-300">L2 Switch</p>
+                                <p class="text-[10px]">Broadcast Domain</p>
+                            </div>
+                        </div>
+
+                        <!-- Node 3: DHCP Server -->
+                        <div class="relative z-10 text-center w-1/4">
+                            <div id="nodeServer" class="w-20 h-20 mx-auto rounded-2xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-indigo-400 shadow-xl transition-all duration-300">
+                                <i class="fa-solid fa-server text-3xl"></i>
+                                <span class="text-[10px] font-mono mt-1 text-slate-400">SZERVER</span>
+                            </div>
+                            <div class="mt-3 font-mono text-xs text-slate-300">
+                                <p class="font-bold">DHCP Szerver</p>
+                                <p class="text-[11px] text-slate-400">MAC: 00:11:22:DD:EE:FF</p>
+                                <p class="text-[11px] font-bold text-indigo-400">IP: 192.168.1.1</p>
+                            </div>
+                        </div>
+
+                        <!-- Animated Packet Object -->
+                        <div id="animatedPacket" class="absolute top-1/2 -translate-y-1/2 left-[20%] z-30 transition-all duration-700 ease-in-out opacity-0 pointer-events-none">
+                            <div id="packetBadge" class="px-3 py-1.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs font-mono shadow-lg flex items-center space-x-1.5 border border-white/20">
+                                <i class="fa-solid fa-envelope"></i>
+                                <span id="packetLabel">DISCOVER</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Simulator Control Buttons -->
+                    <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center space-x-2">
+                            <button id="btnPrevStep" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition disabled:opacity-40 disabled:cursor-not-allowed">
+                                <i class="fa-solid fa-arrow-left mr-1"></i> Előző
+                            </button>
+                            <button id="btnNextStep" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-md transition flex items-center">
+                                Következő Lépés <i class="fa-solid fa-arrow-right ml-2"></i>
+                            </button>
+                            <button id="btnAutoPlay" class="px-4 py-2 rounded-xl bg-emerald-600/80 hover:bg-emerald-500 text-white font-semibold text-xs transition flex items-center">
+                                <i class="fa-solid fa-play mr-1.5"></i> Auto Lejátszás
+                            </button>
+                        </div>
+                        <button id="btnResetSim" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 font-medium text-xs transition border border-slate-700">
+                            <i class="fa-solid fa-rotate-left mr-1"></i> Újraindítás
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Packet Inspector Details Panel (4 cols) -->
+                <div class="lg:col-span-4 glass-panel p-6 rounded-2xl border border-slate-800 font-mono text-xs">
+                    <h3 class="text-sm font-bold text-slate-200 border-b border-slate-800 pb-3 mb-4 flex items-center justify-between">
+                        <span><i class="fa-solid fa-microchip text-cyan-400 mr-2"></i> Csomag Analízis</span>
+                        <span id="udpPortTag" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-cyan-400 border border-cyan-500/30">UDP 67/68</span>
+                    </h3>
+
+                    <div id="packetInspector" class="space-y-3 text-slate-300">
+                        <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
+                            <span class="text-slate-500 block text-[10px] uppercase font-sans font-semibold">Csomag Típusa (Option 53)</span>
+                            <span id="inspectType" class="text-cyan-400 font-bold text-sm">Várakozás...</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
+                                <span class="text-slate-500 block text-[10px] font-sans">Forrás IP (src)</span>
+                                <span id="inspectSrcIp" class="text-slate-200 font-bold">-</span>
+                            </div>
+                            <div class="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
+                                <span class="text-slate-500 block text-[10px] font-sans">Cél IP (dst)</span>
+                                <span id="inspectDstIp" class="text-slate-200 font-bold">-</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
+                                <span class="text-slate-500 block text-[10px] font-sans">Forrás MAC</span>
+                                <span id="inspectSrcMac" class="text-slate-200 font-bold">-</span>
+                            </div>
+                            <div class="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
+                                <span class="text-slate-500 block text-[10px] font-sans">Cél MAC</span>
+                                <span id="inspectDstMac" class="text-slate-200 font-bold">-</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
+                            <span class="text-slate-500 block text-[10px] uppercase font-sans font-semibold mb-1">Példa Payload / Opciók</span>
+                            <div id="inspectPayload" class="text-[11px] space-y-1 text-slate-400">
+                                <p>Kattints a "Következő Lépés" gombra a szimuláció elindításához.</p>
+                            </div>
+                        </div>
+
+                        <div id="stepDescriptionBox" class="p-3 rounded-lg bg-cyan-950/30 border border-cyan-800/50 text-cyan-200 text-[11px] leading-relaxed font-sans">
+                            Nyomd meg a gombot a DORA folyamat elindításához!
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="dora-steps" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-extrabold text-white dark:text-white light:text-slate-900 mb-3">
+                A DORA Lépések Részletei
+            </h2>
+            <p class="text-slate-400 max-w-xl mx-auto text-sm">
+                A DORA betűszó a folyamat négy fázisának kezdőbetűiből áll össze: <strong>D</strong>iscover, <strong>O</strong>ffer, <strong>R</strong>equest, <strong>A</strong>cknowledge.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Step 1: Discover -->
+            <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-cyan-400 relative hover:border-slate-700 transition">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 font-black text-xl flex items-center justify-center">D</span>
+                    <span class="px-2.5 py-1 rounded text-xs font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Client → Broadcast</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">1. DHCP Discover (Felfedezés)</h3>
+                <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                    Az újonnan csatlakozó Kliensnek még nincs IP címe, és azt sem tudja, van-e DHCP szerver a hálózaton. Ezért egy <strong>L2 és L3 Broadcast</strong> üzenetet küld ki.
+                </p>
+                <!-- SVG Illustration -->
+                <div class="bg-slate-950 p-4 rounded-xl mb-4 text-center border border-slate-800/80">
+                    <svg class="w-full h-24 mx-auto" viewBox="0 0 300 80">
+                        <circle cx="40" cy="40" r="18" fill="#1e293b" stroke="#06b6d4" stroke-width="2"/>
+                        <text x="40" y="44" fill="#06b6d4" font-size="10" text-anchor="middle" font-family="monospace">PC</text>
+                        <!-- Broadcast Wave -->
+                        <path d="M 70 40 L 230 40" stroke="#06b6d4" stroke-width="2" stroke-dasharray="4,4"/>
+                        <polygon points="230,36 240,40 230,44" fill="#06b6d4"/>
+                        <circle cx="260" cy="40" r="18" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+                        <text x="260" y="44" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">Szerver</text>
+                    </svg>
+                </div>
+                <ul class="space-y-1.5 text-xs font-mono text-slate-400 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                    <li><strong class="text-slate-300">Forrás IP:</strong> 0.0.0.0</li>
+                    <li><strong class="text-slate-300">Cél IP:</strong> 255.255.255.255 (Broadcast)</li>
+                    <li><strong class="text-slate-300">UDP Portok:</strong> 68 (Src) → 67 (Dst)</li>
+                </ul>
+            </div>
+
+            <!-- Step 2: Offer -->
+            <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-emerald-400 relative hover:border-slate-700 transition">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 font-black text-xl flex items-center justify-center">O</span>
+                    <span class="px-2.5 py-1 rounded text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Server → Client</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">2. DHCP Offer (Ajánlat)</h3>
+                <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                    A DHCP szerver veszi a Discover üzenetet, választ egy szabad IP címet a címkészletből (Pool), és felajánlja azt a kliens MAC címének intézve.
+                </p>
+                <!-- SVG Illustration -->
+                <div class="bg-slate-950 p-4 rounded-xl mb-4 text-center border border-slate-800/80">
+                    <svg class="w-full h-24 mx-auto" viewBox="0 0 300 80">
+                        <circle cx="40" cy="40" r="18" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+                        <text x="40" y="44" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">PC</text>
+                        <!-- Offer Line back -->
+                        <path d="M 230 40 L 70 40" stroke="#10b981" stroke-width="2"/>
+                        <polygon points="70,36 60,40 70,44" fill="#10b981"/>
+                        <circle cx="260" cy="40" r="18" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+                        <text x="260" y="44" fill="#10b981" font-size="10" text-anchor="middle" font-family="monospace">Szerver</text>
+                    </svg>
+                </div>
+                <ul class="space-y-1.5 text-xs font-mono text-slate-400 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                    <li><strong class="text-slate-300">Felajánlott IP (yiaddr):</strong> 192.168.1.100</li>
+                    <li><strong class="text-slate-300">Bérleti Idő:</strong> 86400 mp (24 óra)</li>
+                    <li><strong class="text-slate-300">UDP Portok:</strong> 67 (Src) → 68 (Dst)</li>
+                </ul>
+            </div>
+
+            <!-- Step 3: Request -->
+            <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-amber-400 relative hover:border-slate-700 transition">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 font-black text-xl flex items-center justify-center">R</span>
+                    <span class="px-2.5 py-1 rounded text-xs font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20">Client → Broadcast</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">3. DHCP Request (Kérés)</h3>
+                <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                    A Kliens elfogadja az ajánlatot. Az üzenetet <strong>Broadcast-ként</strong> küldi el, hogy a hálózat esetleges többi DHCP szervere is értesüljön arról, hogy az ő ajánlatukat nem vette igénybe.
+                </p>
+                <!-- SVG Illustration -->
+                <div class="bg-slate-950 p-4 rounded-xl mb-4 text-center border border-slate-800/80">
+                    <svg class="w-full h-24 mx-auto" viewBox="0 0 300 80">
+                        <circle cx="40" cy="40" r="18" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="40" y="44" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="monospace">PC</text>
+                        <path d="M 70 40 L 230 40" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4"/>
+                        <polygon points="230,36 240,40 230,44" fill="#f59e0b"/>
+                        <circle cx="260" cy="40" r="18" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+                        <text x="260" y="44" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="monospace">Szerver</text>
+                    </svg>
+                </div>
+                <ul class="space-y-1.5 text-xs font-mono text-slate-400 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                    <li><strong class="text-slate-300">Kért IP (Option 50):</strong> 192.168.1.100</li>
+                    <li><strong class="text-slate-300">Kiválasztott Szerver (Option 54):</strong> 192.168.1.1</li>
+                    <li><strong class="text-slate-300">Cél IP:</strong> 255.255.255.255</li>
+                </ul>
+            </div>
+
+            <!-- Step 4: Acknowledge -->
+            <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-purple-400 relative hover:border-slate-700 transition">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 font-black text-xl flex items-center justify-center">A</span>
+                    <span class="px-2.5 py-1 rounded text-xs font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20">Server → Client</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">4. DHCP ACK (Megerősítés)</h3>
+                <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                    A szerver véglegesíti a bérletet az adatbázisában, és elküldi a végleges konfig paramétereket (Subnet Mask, Default Gateway, DNS szerverek).
+                </p>
+                <!-- SVG Illustration -->
+                <div class="bg-slate-950 p-4 rounded-xl mb-4 text-center border border-slate-800/80">
+                    <svg class="w-full h-24 mx-auto" viewBox="0 0 300 80">
+                        <circle cx="40" cy="40" r="18" fill="#1e293b" stroke="#8b5cf6" stroke-width="2"/>
+                        <text x="40" y="44" fill="#8b5cf6" font-size="10" text-anchor="middle" font-family="monospace">PC</text>
+                        <path d="M 230 40 L 70 40" stroke="#8b5cf6" stroke-width="2"/>
+                        <polygon points="70,36 60,40 70,44" fill="#8b5cf6"/>
+                        <circle cx="260" cy="40" r="18" fill="#1e293b" stroke="#8b5cf6" stroke-width="2"/>
+                        <text x="260" y="44" fill="#8b5cf6" font-size="10" text-anchor="middle" font-family="monospace">Szerver</text>
+                    </svg>
+                </div>
+                <ul class="space-y-1.5 text-xs font-mono text-slate-400 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                    <li><strong class="text-slate-300">Konfiguráció:</strong> Mask, Gateway, DNS</li>
+                    <li><strong class="text-slate-300">Kliens Állapot:</strong> IP Beállítva & Aktív</li>
+                    <li><strong class="text-slate-300">Siker:</strong> Hálózati kapcsolat kész!</li>
+                </ul>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="lease" class="py-16 bg-slate-900/50 border-y border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/30">Élettartam Kezelés</span>
+                <h2 class="text-3xl font-extrabold text-white dark:text-white light:text-slate-900 mt-2">
+                    Bérleti Idő (Lease Time) & Megújítási Idővonal
+                </h2>
+                <p class="text-slate-400 max-w-xl mx-auto text-sm mt-1">
+                    A kapott IP cím nem örökre szól. Kövesd nyomon, mi történik a bérleti idő előrehaladtával!
+                </p>
+            </div>
+
+            <!-- Interactive Timeline Slider Component -->
+            <div class="glass-panel p-8 rounded-2xl border border-slate-800">
+                
+                <!-- Range Slider -->
+                <div class="mb-8">
+                    <div class="flex justify-between text-xs font-mono text-slate-400 mb-2">
+                        <span>0% (Kezdet)</span>
+                        <span class="text-cyan-400 font-bold">T1 Timer (50%)</span>
+                        <span class="text-amber-400 font-bold">T2 Timer (87.5%)</span>
+                        <span class="text-rose-400 font-bold">100% (Lejárat)</span>
+                    </div>
+                    <input id="leaseSlider" type="range" min="0" max="100" value="0" class="w-full h-3 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                </div>
+
+                <!-- Timeline Visual Progress Display -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="leaseCardsContainer">
+                    
+                    <!-- Phase 0: Start -->
+                    <div id="leaseCard0" class="p-4 rounded-xl bg-slate-950 border border-cyan-500/50 transition">
+                        <div class="text-xs font-mono text-cyan-400 font-bold mb-1">0% - IP Megszerzése</div>
+                        <h4 class="font-bold text-sm text-white mb-2">Bérlet Elindul</h4>
+                        <p class="text-xs text-slate-400">A kliens megkapta az IP címet. A T1 és T2 időzítők elindulnak.</p>
+                    </div>
+
+                    <!-- Phase T1: 50% -->
+                    <div id="leaseCard1" class="p-4 rounded-xl bg-slate-950 border border-slate-800 transition opacity-50">
+                        <div class="text-xs font-mono text-cyan-400 font-bold mb-1">T1 Timer (50%)</div>
+                        <h4 class="font-bold text-sm text-white mb-2">Unicast Megújítás</h4>
+                        <p class="text-xs text-slate-400">A kliens egy <strong>Unicast DHCPREQUEST</strong>-et küld a meglévő szervernek.</p>
+                    </div>
+
+                    <!-- Phase T2: 87.5% -->
+                    <div id="leaseCard2" class="p-4 rounded-xl bg-slate-950 border border-slate-800 transition opacity-50">
+                        <div class="text-xs font-mono text-amber-400 font-bold mb-1">T2 Timer (87.5%)</div>
+                        <h4 class="font-bold text-sm text-white mb-2">Broadcast Rebind</h4>
+                        <p class="text-xs text-slate-400">Ha az eredeti szerver nem válaszolt, a kliens <strong>Broadcast-ként</strong> kér újrasorolást bármely szervertől.</p>
+                    </div>
+
+                    <!-- Phase 100% Expire -->
+                    <div id="leaseCard3" class="p-4 rounded-xl bg-slate-950 border border-slate-800 transition opacity-50">
+                        <div class="text-xs font-mono text-rose-400 font-bold mb-1">100% Lejárat</div>
+                        <h4 class="font-bold text-sm text-white mb-2">Cím Elvesztése</h4>
+                        <p class="text-xs text-slate-400">A bérleti idő lejárt. Az IP cím érvénytelen. A kliens törli a címet és új DORA-t indít.</p>
+                    </div>
+
+                </div>
+
+                <!-- Active Lease Explanation Output -->
+                <div id="leaseDetailText" class="mt-6 p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-sm text-slate-300">
+                    <i class="fa-solid fa-circle-info text-cyan-400 mr-2"></i> <strong>Helyzet:</strong> A kliens friss bérlettel rendelkezik. Nincs szükség hálózati forgalomra.
+                </div>
+
+                <!-- DHCP Release info block -->
+                <div class="mt-6 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-white">DHCP Release (Önkéntes Elengedés)</h4>
+                            <p class="text-xs text-slate-400">Amikor a gép leáll vagy lekapcsolódik a hálózatról, egy <strong>DHCPRELEASE</strong> üzenetet küldhet a szervernek, így az IP azonnal újra kioszthatóvá válik.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="packet" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-extrabold text-white dark:text-white light:text-slate-900 mb-3">
+                DHCP Csomag Szerkezet (Packet Format Inspector)
+            </h2>
+            <p class="text-slate-400 max-w-xl mx-auto text-sm">
+                A DHCP az alkalmazási rétegben működik (UDP 67/68). Kattints a mezőkre a részletes magyarázathoz!
+            </p>
+        </div>
+
+        <!-- Interactive Header Map -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-8 glass-panel p-6 rounded-2xl border border-slate-800">
+                <div class="text-xs font-mono text-slate-400 mb-3 flex justify-between">
+                    <span>BOOTP / DHCP Üzenet Bájttérképe (RFC 2131)</span>
+                    <span class="text-cyan-400">Kattints egy mezőre!</span>
+                </div>
+
+                <div class="grid grid-cols-4 gap-2 font-mono text-xs text-center">
+                    <!-- Row 1 -->
+                    <button onclick="inspectHeaderField('op')" class="p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-cyan-400 font-bold">
+                        op (1 byte)<br><span class="text-[10px] text-slate-400">Üzenet Típus</span>
+                    </button>
+                    <button onclick="inspectHeaderField('htype')" class="p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-slate-300">
+                        htype (1 byte)<br><span class="text-[10px] text-slate-400">Hardware Típus</span>
+                    </button>
+                    <button onclick="inspectHeaderField('hlen')" class="p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-slate-300">
+                        hlen (1 byte)<br><span class="text-[10px] text-slate-400">Cím Hossz</span>
+                    </button>
+                    <button onclick="inspectHeaderField('hops')" class="p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-slate-300">
+                        hops (1 byte)<br><span class="text-[10px] text-slate-400">Relay Ugrások</span>
+                    </button>
+
+                    <!-- Row 2 -->
+                    <button onclick="inspectHeaderField('xid')" class="col-span-4 p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-amber-400 font-bold">
+                        xid (4 bytes) - Transaction ID (Tranzakció Azonosító)
+                    </button>
+
+                    <!-- Row 3 -->
+                    <button onclick="inspectHeaderField('secs')" class="col-span-2 p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-slate-300">
+                        secs (2 bytes) - Eltelt mp
+                    </button>
+                    <button onclick="inspectHeaderField('flags')" class="col-span-2 p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-slate-300">
+                        flags (2 bytes) - Broadcast jelző
+                    </button>
+
+                    <!-- IPs -->
+                    <button onclick="inspectHeaderField('ciaddr')" class="col-span-4 p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-emerald-400 font-bold">
+                        ciaddr (4 bytes) - Client IP Address (Kliens meglévő IP címe)
+                    </button>
+
+                    <button onclick="inspectHeaderField('yiaddr')" class="col-span-4 p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-cyan-400 font-bold">
+                        yiaddr (4 bytes) - Your IP Address (Kliensnek ajánlott IP cím)
+                    </button>
+
+                    <button onclick="inspectHeaderField('siaddr')" class="col-span-4 p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-indigo-400 font-bold">
+                        siaddr (4 bytes) - Server IP Address (Következő szerver IP)
+                    </button>
+
+                    <button onclick="inspectHeaderField('giaddr')" class="col-span-4 p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-purple-400 font-bold">
+                        giaddr (4 bytes) - Gateway / Relay Agent IP Address
+                    </button>
+
+                    <!-- Hardware Address -->
+                    <button onclick="inspectHeaderField('chaddr')" class="col-span-4 p-3 bg-slate-950 border border-slate-800 rounded-lg hover:border-cyan-400 transition text-slate-200">
+                        chaddr (16 bytes) - Client Hardware Address (Kliens MAC címe)
+                    </button>
+
+                    <!-- Options -->
+                    <button onclick="inspectHeaderField('options')" class="col-span-4 p-4 bg-gradient-to-r from-cyan-950/60 via-blue-950/60 to-purple-950/60 border border-cyan-500/40 rounded-lg hover:border-cyan-400 transition text-cyan-300 font-bold">
+                        DHCP Options (Változó hossz) - Opt 53 (Message Type), Opt 1 (Subnet), Opt 3 (Router), Opt 6 (DNS)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Header Field Detail Display Box -->
+            <div class="lg:col-span-4 glass-panel p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                <div>
+                    <span class="text-xs font-mono text-slate-500 uppercase block mb-1">Mező Részletei</span>
+                    <h3 id="headerFieldName" class="text-xl font-bold text-cyan-400 mb-3">Válassz egy mezőt!</h3>
+                    <p id="headerFieldDesc" class="text-sm text-slate-300 leading-relaxed mb-4">
+                        Kattints a bal oldali kártyatérkép bármelyik mezőjére, hogy lásd a benne tárolt hálózati adatokat és azok szerepét.
+                    </p>
+                </div>
+                <div id="headerFieldExample" class="p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-xs text-slate-400">
+                    Példa érték: -
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="advanced" class="py-16 bg-slate-900/50 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">Mérnöki Szint</span>
+                <h2 class="text-3xl font-extrabold text-white dark:text-white light:text-slate-900 mt-2">
+                    Haladó Koncepciók & Biztonság
+                </h2>
+                <p class="text-slate-400 max-w-xl mx-auto text-sm">
+                    A DHCP Relay Agent működése több alhálózat esetén, valamint a leggyakoribb hálózati támadási formák.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                
+                <!-- DHCP Relay Agent -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-route"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">DHCP Relay Agent (Option 82)</h3>
+                    </div>
+                    <p class="text-sm text-slate-300 leading-relaxed mb-4">
+                        Mivel az L2/L3 Broadcast üzenetek (255.255.255.255) nem mennek át a routereken, a más alhálózaton lévő kliensek kéréseit a <strong>DHCP Relay Agent (Közvetítő)</strong> fogadja, átalakítja <strong>Unicast</strong> csomaggá (beállítva a <code class="text-purple-400 font-mono">giaddr</code> mezőt), majd továbbítja a központi DHCP szerver felé.
+                    </p>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <div class="text-xs font-mono text-slate-400 flex items-center justify-between">
+                            <span>VLAN 10 Kliens</span>
+                            <i class="fa-solid fa-arrow-right text-purple-400"></i>
+                            <span>Relay Router</span>
+                            <i class="fa-solid fa-arrow-right text-purple-400"></i>
+                            <span>DHCP Szerver</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Threats -->
+                <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white">DHCP Biztonsági Fenyegetések</h3>
+                    </div>
+                    <div class="space-y-3 text-sm text-slate-300">
+                        <div class="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                            <strong class="text-rose-400 block mb-0.5">1. Rogue DHCP Server (Gonosz Szerver)</strong>
+                            Egy jogosulatlan DHCP szerver hamis hálózati adatokat (pl. saját magát mint Default Gateway) oszt ki Man-in-the-Middle támadáshoz.
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                            <strong class="text-amber-400 block mb-0.5">2. DHCP Starvation (Címkimerítés)</strong>
+                            A támadó hamis MAC címek ezreivel kimeríti a DHCP pool összes elosztható IP címét.
+                        </div>
+                        <div class="p-3 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-xs">
+                            <strong class="text-emerald-400 block mb-0.5">Védekezés: DHCP Snooping</strong>
+                            A switcheken beállított funkció, amely csak a megbízható (Trusted) portokról engedélyezi a DHCP Offer és ACK csomagokat.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="glass-panel p-8 rounded-2xl border border-cyan-500/30 max-w-3xl mx-auto">
+                <div class="flex items-center space-x-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg font-bold">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Gyors Tudásellenőrző Kvíz</h3>
+                        <p class="text-xs text-slate-400">Teszteld, mit tanultál a DHCP működéséről!</p>
+                    </div>
+                </div>
+
+                <div id="quizContainer" class="space-y-4">
+                    <p id="quizQuestion" class="font-semibold text-slate-200 text-sm">
+                        1. Milyen UDP portokat használ a DHCP a kommunikáció során?
+                    </p>
+                    <div id="quizOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
+                        <button onclick="checkQuizAnswer(0)" class="p-3 bg-slate-950 border border-slate-800 rounded-xl hover:border-cyan-400 text-left transition text-slate-300">A) TCP 80 és 443</button>
+                        <button onclick="checkQuizAnswer(1)" class="p-3 bg-slate-950 border border-slate-800 rounded-xl hover:border-cyan-400 text-left transition text-slate-300">B) UDP 67 és 68</button>
+                        <button onclick="checkQuizAnswer(2)" class="p-3 bg-slate-950 border border-slate-800 rounded-xl hover:border-cyan-400 text-left transition text-slate-300">C) UDP 53 és 69</button>
+                        <button onclick="checkQuizAnswer(3)" class="p-3 bg-slate-950 border border-slate-800 rounded-xl hover:border-cyan-400 text-left transition text-slate-300">D) ICMP Type 8</button>
+                    </div>
+                    <div id="quizFeedback" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="py-8 bg-slate-950 border-t border-slate-800 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="mb-2">DHCP Interaktív Oktató Weboldal & Szimulátor © 2026</p>
+            <p class="text-[11px] text-slate-600">RFC 2131 & RFC 2132 szabványok alapján tervezve.</p>
+        </div>
+    </footer>
+
+    <script>
+        
+        // Theme Switcher Logic
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            document.documentElement.classList.toggle('light');
+        });
+
+        // Background Hero Animation
+        const canvas = document.getElementById('heroCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = canvas.parentElement.offsetHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = canvas.parentElement.offsetHeight;
+        });
+
+        const nodes = Array.from({ length: 25 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: (Math.random() - 0.5) * 0.8,
+            radius: Math.random() * 2 + 1.5
+        }));
+
+        function animateHero() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#06b6d4';
+            ctx.strokeStyle = 'rgba(6, 182, 212, 0.15)';
+
+            for (let i = 0; i < nodes.length; i++) {
+                let n = nodes[i];
+                n.x += n.vx;
+                n.y += n.vy;
+
+                if (n.x < 0 || n.x > width) n.vx *= -1;
+                if (n.y < 0 || n.y > height) n.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                for (let j = i + 1; j < nodes.length; j++) {
+                    let n2 = nodes[j];
+                    let dist = Math.hypot(n.x - n2.x, n.y - n2.y);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(n.x, n.y);
+                        ctx.lineTo(n2.x, n2.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateHero);
+        }
+        animateHero();
+
+
+        const doraSteps = [
+            {
+                phase: "READY",
+                status: "Várakozás az indításra...",
+                packetLabel: "-",
+                packetColor: "bg-slate-700",
+                pos: "20%",
+                opacity: 0,
+                type: "Várakozás...",
+                srcIp: "-",
+                dstIp: "-",
+                srcMac: "-",
+                dstMac: "-",
+                payload: "Kattints a Következő Lépésre!",
+                desc: "Nyomd meg a 'Következő Lépés' gombot a DORA folyamat elindításához.",
+                clientIpText: "IP: 0.0.0.0 (Unconfigured)",
+                activeNode: null
+            },
+            {
+                phase: "DISCOVER",
+                status: "Kliens sugározza a Discover üzenetet...",
+                packetLabel: "DISCOVER",
+                packetColor: "bg-cyan-500",
+                pos: "50%",
+                opacity: 1,
+                type: "DHCP DISCOVER (Option 53 = 1)",
+                srcIp: "0.0.0.0",
+                dstIp: "255.255.255.255",
+                srcMac: "AA:BB:CC:11:22:33",
+                dstMac: "FF:FF:FF:FF:FF:FF",
+                payload: "Option 53: Discover<br>Option 55: Parameter Request List (Subnet, Router, DNS)",
+                desc: "1. Lépés: A Kliens L2 és L3 Broadcast csomagot küld a hálózatra, hogy felkutassa az elérhető DHCP szervereket.",
+                clientIpText: "IP: 0.0.0.0 (Keresés...)",
+                activeNode: "Client"
+            },
+            {
+                phase: "OFFER",
+                status: "Szerver válaszol egy felajánlott IP címmel...",
+                packetLabel: "OFFER",
+                packetColor: "bg-emerald-500",
+                pos: "20%",
+                opacity: 1,
+                type: "DHCP OFFER (Option 53 = 2)",
+                srcIp: "192.168.1.1",
+                dstIp: "255.255.255.255 / Unicast",
+                srcMac: "00:11:22:DD:EE:FF",
+                dstMac: "AA:BB:CC:11:22:33",
+                payload: "yiaddr (Felajánlott IP): 192.168.1.100<br>Lease Time: 86400s (24h)<br>Option 1: 255.255.255.0",
+                desc: "2. Lépés: A DHCP Szerver felajánl egy szabad IP címet (192.168.1.100) és a bérleti időtartamot.",
+                clientIpText: "IP: 0.0.0.0 (Ajánlat kapva)",
+                activeNode: "Server"
+            },
+            {
+                phase: "REQUEST",
+                status: "Kliens elküldi a hivatalos kérését...",
+                packetLabel: "REQUEST",
+                packetColor: "bg-amber-500",
+                pos: "80%",
+                opacity: 1,
+                type: "DHCP REQUEST (Option 53 = 3)",
+                srcIp: "0.0.0.0",
+                dstIp: "255.255.255.255",
+                srcMac: "AA:BB:CC:11:22:33",
+                dstMac: "FF:FF:FF:FF:FF:FF",
+                payload: "Option 50 (Requested IP): 192.168.1.100<br>Option 54 (Server Identifier): 192.168.1.1",
+                desc: "3. Lépés: A Kliens Broadcast úton jelzi, hogy elfogadja a szerver ajánlatát, így a többi szerver is felszabadíthatja az általa kínált címet.",
+                clientIpText: "IP: 0.0.0.0 (Kérés elküldve)",
+                activeNode: "Client"
+            },
+            {
+                phase: "ACK",
+                status: "Szerver véglegesíti a beállításokat!",
+                packetLabel: "ACKNOWLEDGE",
+                packetColor: "bg-purple-500",
+                pos: "20%",
+                opacity: 1,
+                type: "DHCP ACK (Option 53 = 5)",
+                srcIp: "192.168.1.1",
+                dstIp: "192.168.1.100",
+                srcMac: "00:11:22:DD:EE:FF",
+                dstMac: "AA:BB:CC:11:22:33",
+                payload: "Subnet Mask: 255.255.255.0<br>Default Gateway: 192.168.1.1<br>DNS Server: 8.8.8.8",
+                desc: "4. Lépés: A szerver nyugtázza a kérést (ACK), elküldi a hálózati beállításokat. A Kliens sikeresen beállította az IP címet!",
+                clientIpText: "IP: 192.168.1.100 (Beállítva!)",
+                activeNode: "Server"
+            }
+        ];
+
+        let currentStep = 0;
+        let autoPlayInterval = null;
+
+        const simStatusText = document.getElementById('simStatusText');
+        const phaseBadge = document.getElementById('phaseBadge');
+        const animatedPacket = document.getElementById('animatedPacket');
+        const packetLabel = document.getElementById('packetLabel');
+        const packetBadge = document.getElementById('packetBadge');
+        const inspectType = document.getElementById('inspectType');
+        const inspectSrcIp = document.getElementById('inspectSrcIp');
+        const inspectDstIp = document.getElementById('inspectDstIp');
+        const inspectSrcMac = document.getElementById('inspectSrcMac');
+        const inspectDstMac = document.getElementById('inspectDstMac');
+        const inspectPayload = document.getElementById('inspectPayload');
+        const stepDescriptionBox = document.getElementById('stepDescriptionBox');
+        const clientIpLabel = document.getElementById('clientIpLabel');
+        const nodeClient = document.getElementById('nodeClient');
+        const nodeServer = document.getElementById('nodeServer');
+
+        function updateSimulatorUI() {
+            const data = doraSteps[currentStep];
+
+            simStatusText.innerText = data.status;
+            phaseBadge.innerText = data.phase;
+            packetLabel.innerText = data.packetLabel;
+            
+            // Set packet position & animation
+            animatedPacket.style.left = data.pos;
+            animatedPacket.style.opacity = data.opacity;
+
+            // Inspector panel
+            inspectType.innerText = data.type;
+            inspectSrcIp.innerText = data.srcIp;
+            inspectDstIp.innerText = data.dstIp;
+            inspectSrcMac.innerText = data.srcMac;
+            inspectDstMac.innerText = data.dstMac;
+            inspectPayload.innerHTML = data.payload;
+            stepDescriptionBox.innerText = data.desc;
+            clientIpLabel.innerText = data.clientIpText;
+
+            // Node Highlights
+            nodeClient.classList.remove('border-cyan-400', 'glow-cyan');
+            nodeServer.classList.remove('border-indigo-400', 'glow-purple');
+
+            if (data.activeNode === 'Client') {
+                nodeClient.classList.add('border-cyan-400', 'glow-cyan');
+            } else if (data.activeNode === 'Server') {
+                nodeServer.classList.add('border-indigo-400', 'glow-purple');
+            }
+
+            document.getElementById('btnPrevStep').disabled = (currentStep === 0);
+            if (currentStep === doraSteps.length - 1) {
+                document.getElementById('btnNextStep').innerText = "Kész! (Újra)";
+            } else {
+                document.getElementById('btnNextStep').innerHTML = 'Következő Lépés <i class="fa-solid fa-arrow-right ml-2"></i>';
+            }
+        }
+
+        document.getElementById('btnNextStep').addEventListener('click', () => {
+            if (currentStep < doraSteps.length - 1) {
+                currentStep++;
+            } else {
+                currentStep = 0;
+            }
+            updateSimulatorUI();
+        });
+
+        document.getElementById('btnPrevStep').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateSimulatorUI();
+            }
+        });
+
+        document.getElementById('btnResetSim').addEventListener('click', () => {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                document.getElementById('btnAutoPlay').innerHTML = '<i class="fa-solid fa-play mr-1.5"></i> Auto Lejátszás';
+            }
+            currentStep = 0;
+            updateSimulatorUI();
+        });
+
+        document.getElementById('btnAutoPlay').addEventListener('click', () => {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                document.getElementById('btnAutoPlay').innerHTML = '<i class="fa-solid fa-play mr-1.5"></i> Auto Lejátszás';
+            } else {
+                document.getElementById('btnAutoPlay').innerHTML = '<i class="fa-solid fa-pause mr-1.5"></i> Szünet';
+                autoPlayInterval = setInterval(() => {
+                    if (currentStep < doraSteps.length - 1) {
+                        currentStep++;
+                    } else {
+                        currentStep = 0;
+                    }
+                    updateSimulatorUI();
+                }, 2200);
+            }
+        });
+
+
+        const leaseSlider = document.getElementById('leaseSlider');
+        const leaseDetailText = document.getElementById('leaseDetailText');
+        const leaseCard0 = document.getElementById('leaseCard0');
+        const leaseCard1 = document.getElementById('leaseCard1');
+        const leaseCard2 = document.getElementById('leaseCard2');
+        const leaseCard3 = document.getElementById('leaseCard3');
+
+        leaseSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            
+            [leaseCard0, leaseCard1, leaseCard2, leaseCard3].forEach(c => {
+                c.classList.add('opacity-50');
+                c.classList.remove('border-cyan-500', 'border-amber-500', 'border-rose-500');
+            });
+
+            if (val < 50) {
+                leaseCard0.classList.remove('opacity-50');
+                leaseCard0.classList.add('border-cyan-500');
+                leaseDetailText.innerHTML = `<i class="fa-solid fa-check text-emerald-400 mr-2"></i> <strong>0% - 49%:</strong> A bérlet aktív. A kliens zavartalanul használja az IP címet (${val}% eltelt).`;
+            } else if (val >= 50 && val < 87) {
+                leaseCard1.classList.remove('opacity-50');
+                leaseCard1.classList.add('border-cyan-500');
+                leaseDetailText.innerHTML = `<i class="fa-solid fa-rotate text-cyan-400 mr-2"></i> <strong>T1 Időzítő (50%):</strong> A kliens Unicast DHCPREQUEST csomagot küld az eredeti szervernek a bérlet meghosszabbítására.`;
+            } else if (val >= 87 && val < 100) {
+                leaseCard2.classList.remove('opacity-50');
+                leaseCard2.classList.add('border-amber-500');
+                leaseDetailText.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-2"></i> <strong>T2 Időzítő (87.5%):</strong> Nem érkezett válasz az eredeti szervertől. A kliens most Broadcast kérést küld, hogy bármelyik hálózati DHCP szerver megújíthassa a bérletet.`;
+            } else {
+                leaseCard3.classList.remove('opacity-50');
+                leaseCard3.classList.add('border-rose-500');
+                leaseDetailText.innerHTML = `<i class="fa-solid fa-xmark text-rose-400 mr-2"></i> <strong>100% Lejárt:</strong> A bérlet érvényét vesztette. A kliens nem használhatja tovább az IP címet, és újra kezdi a DORA folyamatot!`;
+            }
+        });
+
+
+        const headerFieldsData = {
+            op: {
+                name: "op (Message Opcode / Type)",
+                desc: "A üzenet típusát jelzi: 1 = BOOTREQUEST (Kliens küldi), 2 = BOOTREPLY (Szerver küldi).",
+                example: "1 (Kliens kérés)"
+            },
+            htype: {
+                name: "htype (Hardware Type)",
+                desc: "A hálózati hardver típusát határozza meg. Értéke szinte mindig 1 (Ethernet).",
+                example: "1 (Ethernet)"
+            },
+            hlen: {
+                name: "hlen (Hardware Address Length)",
+                desc: "A fizikai MAC cím hossza bájtokban. Ethernet esetén az értéke 6 bájt.",
+                example: "6"
+            },
+            hops: {
+                name: "hops (Relay Hops)",
+                desc: "Relay Agenten való áthaladáskor növekszik. Segít megelőzni a hálózati hurkokat.",
+                example: "0 (Közvetlen kapcsolat)"
+            },
+            xid: {
+                name: "xid (Transaction ID)",
+                desc: "A Kliens által generált véletlenszerű tranzakció azonosító. Ezzel párosítja össze a szervertől érkező válaszokat a saját kéréseivel.",
+                example: "0x39A1F2C4"
+            },
+            secs: {
+                name: "secs (Seconds elapsed)",
+                desc: "A címkérési folyamat kezdete óta eltelt másodpercek száma.",
+                example: "0"
+            },
+            flags: {
+                name: "flags (Broadcast Flag)",
+                desc: "A legfelső bit (Broadcast flag) határozza meg, hogy a szerver Broadcastként küldje-e vissza a választ, ha a kliens még nem tud Unicastot fogadni.",
+                example: "0x8000 (Broadcast válasz kérése)"
+            },
+            ciaddr: {
+                name: "ciaddr (Client IP Address)",
+                desc: "A Kliens meglévő IP címe. Csak akkor van kitöltve, ha a Kliens BOUND, RENEW vagy REBIND állapotban van.",
+                example: "0.0.0.0"
+            },
+            yiaddr: {
+                name: "yiaddr (Your IP Address)",
+                desc: "A szerver által a kliensnek felajánlott / kiosztott IP cím.",
+                example: "192.168.1.100"
+            },
+            siaddr: {
+                name: "siaddr (Server IP Address)",
+                desc: "A következő szerver IP címe, amelyet a hálózati indítási (bootstrap/PXE) folyamatban kell használni.",
+                example: "192.168.1.1"
+            },
+            giaddr: {
+                name: "giaddr (Gateway / Relay IP)",
+                desc: "A DHCP Relay Agent IP címe. Ha a kliens más alhálózaton van, a router ide írja a saját IP-jét.",
+                example: "0.0.0.0 (Helyi alhálózat)"
+            },
+            chaddr: {
+                name: "chaddr (Client Hardware Address)",
+                desc: "A Kliens fizikai MAC címe (16 bájtos mező, de Ethernetnél 6 bájt használt).",
+                example: "AA:BB:CC:11:22:33"
+            },
+            options: {
+                name: "DHCP Options (Opciók mező)",
+                desc: "Változó hosszúságú mező, amely a DHCP specifikus beállításokat tartalmazza! Kezdete a Magic Cookie (0x63825363). Főbb opciók: Option 53 (Message Type), Option 1 (Subnet Mask), Option 3 (Router), Option 6 (DNS).",
+                example: "Opt 53=1 (Discover), Opt 55=List"
+            }
+        };
+
+        function inspectHeaderField(fieldKey) {
+            const f = headerFieldsData[fieldKey];
+            if (!f) return;
+            document.getElementById('headerFieldName').innerText = f.name;
+            document.getElementById('headerFieldDesc').innerText = f.desc;
+            document.getElementById('headerFieldExample').innerText = "Példa érték: " + f.example;
+        }
+
+
+        const quizQuestions = [
+            {
+                q: "1. Milyen UDP portokat használ a DHCP a kommunikáció során?",
+                opts: ["A) TCP 80 és 443", "B) UDP 67 és 68", "C) UDP 53 és 69", "D) ICMP Type 8"],
+                correct: 1,
+                explain: "Helyes! A DHCP Szerver a 67-es UDP porton, a Kliens pedig a 68-as UDP porton hallgat."
+            },
+            {
+                q: "2. Melyik DORA lépésben küldi el a szerver a felajánlott IP címet?",
+                opts: ["A) Discover", "B) Offer", "C) Request", "D) Acknowledge"],
+                correct: 1,
+                explain: "Helyes! A DHCP Offer (Ajánlat) lépésben küldi el a szerver a felajánlott címet."
+            },
+            {
+                q: "3. A bérleti idő hány százalékánál kísérli meg először a Kliens az Unicast megújítást (T1 timer)?",
+                opts: ["A) 25%", "B) 50%", "C) 87.5%", "D) 100%"],
+                correct: 1,
+                explain: "Pontos! A T1 időzítő a bérleti idő 50%-ánál jár le, ekkor Unicast DHCPREQUEST-et küld a gép."
+            }
+        ];
+
+        let currentQuizIndex = 0;
+
+        function checkQuizAnswer(selectedOpt) {
+            const q = quizQuestions[currentQuizIndex];
+            const feedback = document.getElementById('quizFeedback');
+            feedback.classList.remove('hidden', 'bg-emerald-950/60', 'text-emerald-300', 'bg-rose-950/60', 'text-rose-300', 'border-emerald-500/50', 'border-rose-500/50', 'border');
+
+            if (selectedOpt === q.correct) {
+                feedback.classList.add('bg-emerald-950/60', 'text-emerald-300', 'border', 'border-emerald-500/50');
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> ${q.explain}`;
+            } else {
+                feedback.classList.add('bg-rose-950/60', 'text-rose-300', 'border', 'border-rose-500/50');
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark mr-2"></i> Helytelen válasz. Próbáld újra!`;
+            }
+        }
+
+        // Initialize Simulator UI
+        updateSimulatorUI();
+    </script>
+</body>
+</html>
