@@ -4,7 +4,7 @@ Ez a weboldal egy hálózati témájú tanulóoldal, amelyet 3 fős csapat kész
 
 ## Az oldalak felépítése
 
-- **Üdvözlő oldal:** köszöntő szöveg, rendszergazdás kép, linkek a két témához és a három csapattaghoz.
+- **Üdvözlő oldal:** köszöntő szöveg, linkek a két témához és a három csapattaghoz.
 - **DHCP oldal:** rövid ismertető a DHCP-ről és egy ábra a folyamatáról.
 - **OSI modell oldal:** rövid ismertető az OSI modellről és az OSI–TCP/IP összehasonlító ábra.
 - **Bemutatkozó oldalak:** minden tagnak egy (név, hobby, kedvenc sport, kedvenc állat képpel).
