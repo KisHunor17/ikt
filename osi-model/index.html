@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Az OSI-modell 7 rétege egyszerűen, magyarul.">
+  <title>OSI-modell | Hálózati alapok</title>
+  <link href="bootstrap.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top site-nav">
+    <div class="container">
+      <a class="navbar-brand" href="#top"><span class="brand-mark">OSI</span> HÁLÓZATI ALAPOK</a>
+      <button class="navbar-toggler" type="button" id="menuToggle" aria-controls="mainNav" aria-expanded="false" aria-label="Menü megnyitása">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+          <li class="nav-item"><a class="nav-link" href="#about">Mi az OSI?</a></li>
+          <li class="nav-item"><a class="nav-link" href="#layers">7 réteg</a></li>
+          <li class="nav-item"><a class="nav-link" href="#flow">Adatút</a></li>
+          <li class="nav-item"><a class="btn btn-outline-light btn-sm px-3" href="#contact">Kérdésed van?</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top">
+    <section class="hero-section">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-7">
+            <p class="eyebrow"><span class="status-dot"></span> Hálózati alapfogalom</p>
+            <h1>Az OSI-modell<br><span>7 rétege</span><br>érthetően.</h1>
+            <p class="lead hero-lead">Egy egyszerű, vizuális útmutató ahhoz, hogyan jut el az adat az alkalmazástól a hálózati kábelen át a másik eszközig.</p>
+            <div class="d-flex flex-wrap gap-3 mt-4">
+              <a class="btn btn-light btn-lg" href="#layers">Rétegek felfedezése</a>
+              <a class="btn btn-outline-light btn-lg" href="#flow">Hogyan működik? <span class="ms-2">→</span></a>
+            </div>
+            <div class="row hero-stats mt-5 g-4">
+              <div class="col-4"><strong>7</strong><small>OSI-réteg</small></div>
+              <div class="col-4"><strong>2</strong><small>Adatirány</small></div>
+              <div class="col-4"><strong>1</strong><small>Közös modell</small></div>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="osi-stack" aria-label="Az OSI-modell hét rétege">
+              <div class="stack-layer layer-7"><b>7</b> Alkalmazási réteg</div>
+              <div class="stack-layer layer-6"><b>6</b> Megjelenítési réteg</div>
+              <div class="stack-layer layer-5"><b>5</b> Viszonyréteg</div>
+              <div class="stack-layer layer-4"><b>4</b> Szállítási réteg</div>
+              <div class="stack-layer layer-3"><b>3</b> Hálózati réteg</div>
+              <div class="stack-layer layer-2"><b>2</b> Adatkapcsolati réteg</div>
+              <div class="stack-layer layer-1"><b>1</b> Fizikai réteg</div>
+            </div>
+            <p class="placeholder-note">A magasabb rétegek közelebb vannak a felhasználóhoz.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="section-pad bg-white">
+      <div class="container">
+        <div class="row g-5 align-items-center">
+          <div class="col-lg-4">
+            <p class="eyebrow light-eyebrow">Mi az OSI-modell?</p>
+            <div class="about-placeholder osi-diagram"><span>ALKALMAZÁS<br>↓<br>ADAT<br>↓<br>FIZIKAI JEL</span></div>
+          </div>
+          <div class="col-lg-7 offset-lg-1">
+            <h2>Egy közös nyelv a hálózatok megértéséhez.</h2>
+            <p class="section-text">Az OSI (Open Systems Interconnection) modell egy elméleti keretrendszer, amely a hálózati kommunikációt hét különálló rétegre bontja.</p>
+            <p class="section-text">Minden rétegnek saját feladata van. Ez segít a tervezésben, a hibakeresésben és abban, hogy megértsük, hol történik egy adatkapcsolati probléma.</p>
+            <a class="text-link" href="#layers">Ugrás a 7 réteghez <span>↗</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="layers" class="section-pad soft-section">
+      <div class="container">
+        <p class="eyebrow">A modell felépítése</p>
+        <h2>A 7 réteg, felülről lefelé.</h2>
+        <div class="timeline mt-5">
+          <article class="row timeline-row py-4 layer-row layer-row-7">
+            <div class="col-md-2 timeline-date">07 / Alkalmazás</div>
+            <div class="col-md-3"><h3>Felhasználói szolgáltatások</h3><span class="company">HTTP · DNS · SMTP</span></div>
+            <div class="col-md-7"><p>A hálózati szolgáltatások közvetlenül az alkalmazások számára. Itt találkozik a felhasználó a hálózattal egy böngészőn vagy levelezőprogramon keresztül.</p></div>
+          </article>
+          <article class="row timeline-row py-4 layer-row layer-row-6">
+            <div class="col-md-2 timeline-date">06 / Megjelenítés</div>
+            <div class="col-md-3"><h3>Adatformátum</h3><span class="company">Titkosítás · Tömörítés</span></div>
+            <div class="col-md-7"><p>Az adatok formátumát, kódolását és átalakítását kezeli, hogy a különböző rendszerek értelmezni tudják egymást.</p></div>
+          </article>
+          <article class="row timeline-row py-4 layer-row layer-row-5">
+            <div class="col-md-2 timeline-date">05 / Viszony</div>
+            <div class="col-md-3"><h3>Kapcsolat kezelése</h3><span class="company">Munkamenet</span></div>
+            <div class="col-md-7"><p>Kapcsolatot hoz létre, tart fenn és zár le az alkalmazások között. A kommunikáció menetét és szinkronizációját felügyeli.</p></div>
+          </article>
+          <article class="row timeline-row py-4 layer-row layer-row-4">
+            <div class="col-md-2 timeline-date">04 / Szállítás</div>
+            <div class="col-md-3"><h3>Végponttól végpontig</h3><span class="company">TCP · UDP</span></div>
+            <div class="col-md-7"><p>Az adatok megbízható vagy gyors továbbításáért felel. Szegmentál, sorrendet kezel, és szükség esetén újraküldi a hiányzó adatokat.</p></div>
+          </article>
+          <article class="row timeline-row py-4 layer-row layer-row-3">
+            <div class="col-md-2 timeline-date">03 / Hálózati</div>
+            <div class="col-md-3"><h3>Útválasztás</h3><span class="company">IP · Router</span></div>
+            <div class="col-md-7"><p>A csomagok útvonalát választja ki a hálózatok között. A logikai címzés és az útválasztók főként ezen a rétegen működnek.</p></div>
+          </article>
+          <article class="row timeline-row py-4 layer-row layer-row-2">
+            <div class="col-md-2 timeline-date">02 / Adatkapcsolati</div>
+            <div class="col-md-3"><h3>Helyi kézbesítés</h3><span class="company">Ethernet · MAC</span></div>
+            <div class="col-md-7"><p>A közvetlenül összekapcsolt eszközök közötti adatátvitelt kezeli. Kereteket, MAC-címeket és hibafelismerést használ.</p></div>
+          </article>
+          <article class="row timeline-row py-4 layer-row layer-row-1">
+            <div class="col-md-2 timeline-date">01 / Fizikai</div>
+            <div class="col-md-3"><h3>Jelek és bitek</h3><span class="company">Kábel · Rádió · Fény</span></div>
+            <div class="col-md-7"><p>A bitek fizikai továbbítása elektromos, fény- vagy rádiójelek formájában. Ide tartoznak a kábelek, csatlakozók és rádiós jelek.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="flow" class="section-pad navy-section">
+      <div class="container">
+        <p class="eyebrow">Adatút a gyakorlatban</p>
+        <h2 class="text-white">Küldéskor lefelé, fogadáskor felfelé.</h2>
+        <div class="row g-3 mt-4">
+          <div class="col-md-4"><div class="skill-card"><small>01 / Küldő</small><h3>Encapsulation</h3><p class="text-light mb-0">A küldő eszközön az alkalmazási adat minden rétegen áthalad, és az adott réteg saját információt ad hozzá.</p></div></div>
+          <div class="col-md-4"><div class="skill-card"><small>02 / Hálózat</small><h3>Adatcsomagok</h3><p class="text-light mb-0">Az adat különböző egységeken utazik: szegmens, csomag, keret, majd bitek formájában.</p></div></div>
+          <div class="col-md-4"><div class="skill-card"><small>03 / Fogadó</small><h3>Decapsulation</h3><p class="text-light mb-0">A fogadó oldalon a rétegek egymás után eltávolítják a hozzáadott információt, amíg az alkalmazás megkapja az adatot.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-pad bg-white">
+      <div class="container">
+        <p class="eyebrow light-eyebrow">Gyors hibakeresési tipp</p>
+        <h2>Alulról felfelé keresd a hibát.</h2>
+        <div class="row g-4 mt-4">
+          <div class="col-lg-4"><article class="project-card"><div class="project-art art-one"><span>01</span></div><div class="p-4"><small>Fizikai réteg</small><h3>Van kapcsolat?</h3><p>Ellenőrizd a tápellátást, kábelt, portot, Wi-Fi-jelet és a link LED-et.</p></div></article></div>
+          <div class="col-lg-4"><article class="project-card"><div class="project-art art-two"><span>02</span></div><div class="p-4"><small>Hálózati réteg</small><h3>Van útvonal?</h3><p>Ellenőrizd az IP-címet, az átjárót, a DNS-t és a routing táblát.</p></div></article></div>
+          <div class="col-lg-4"><article class="project-card"><div class="project-art art-three"><span>03</span></div><div class="p-4"><small>Alkalmazási réteg</small><h3>Működik a szolgáltatás?</h3><p>Ellenőrizd a portot, a szolgáltatást, a jogosultságot és az alkalmazás naplóit.</p></div></article></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section-pad navy-section">
+      <div class="container">
+        <div class="row g-5 align-items-start">
+          <div class="col-lg-5">
+            <p class="eyebrow">Tanulási jegyzet</p>
+            <h2 class="text-white">Van kérdésed az OSI-modellel kapcsolatban?</h2>
+            <p class="contact-copy">Írd meg, melyik réteg vagy hálózati fogalom érdekel, és bővítsd tovább a saját rendszergazdai jegyzeteidet.</p>
+          </div>
+          <div class="col-lg-6 offset-lg-1">
+            <form id="contactForm" class="contact-form">
+              <div class="row g-3"><div class="col-md-6"><label for="name">Név</label><input id="name" class="form-control" type="text" placeholder="A neved" required></div><div class="col-md-6"><label for="email">E-mail</label><input id="email" class="form-control" type="email" placeholder="te@pelda.hu" required></div></div>
+              <div class="mt-3"><label for="message">Kérdés vagy megjegyzés</label><textarea id="message" class="form-control" rows="5" placeholder="Melyik OSI-réteget szeretnéd jobban megérteni?" required></textarea></div>
+              <button class="btn btn-light w-100 mt-4" type="submit">Üzenet küldése</button>
+              <div id="formMessage" class="form-message" role="status"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container d-flex justify-content-between flex-wrap gap-2"><span>© 2026 OSI-modell · Hálózati tanulási oldal</span><a href="#top">Vissza a tetejére ↑</a></div></footer>
+  <script src="script.js"></script>
+</body>
+</html>
