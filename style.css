@@ -1,0 +1,73 @@
+/* Alap beállítások */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f0f4f8;
+    color: #222;
+    margin: 0;
+    padding: 0;
+}
+
+/* Fejléc */
+header {
+    background-color: #1f4e79;
+    color: white;
+    text-align: center;
+    padding: 30px 20px;
+}
+
+/* Fő tartalom doboz */
+main {
+    max-width: 800px;
+    margin: 30px auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+h1 {
+    margin: 0;
+}
+
+h2 {
+    color: #1f4e79;
+    border-bottom: 2px solid #1f4e79;
+    padding-bottom: 5px;
+}
+
+ul {
+    line-height: 1.8;
+}
+
+a {
+    color: #1f4e79;
+    font-weight: bold;
+}
+
+a:hover {
+    color: #e67e22;
+}
+
+/* Képek */
+img {
+    max-width: 100%;
+    border-radius: 8px;
+    display: block;
+    margin: 20px auto;
+    background-color: #dfe6ee; /* szürke doboz, amíg nincs kép */
+    min-height: 150px;
+}
+
+/* Kép alatti leírás */
+figcaption {
+    text-align: center;
+    font-style: italic;
+    color: #555;
+}
+
+/* Jobb oldalt alul lévő link */
+footer {
+    max-width: 800px;
+    margin: 0 auto 30px auto;
+    text-align: right;
+}
